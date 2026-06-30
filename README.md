@@ -11,6 +11,18 @@ de vulnerabilidades. Pensada para correr en local con Docker.
 
 ---
 
+## 📸 Capturas
+
+### Dashboard
+
+![Dashboard de HTB Tracker](docs/img/dashboard.png)
+
+### Listado de máquinas con filtros
+
+![Listado de máquinas](docs/img/maquinas.png)
+
+---
+
 ## ✨ Características
 
 - **Dashboard** con resumen de progreso general, por certificación (con desglose
