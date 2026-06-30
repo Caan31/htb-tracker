@@ -1,0 +1,104 @@
+# =============================================================
+#  HTB TRACKER - Orquestación de servicios con Docker Compose
+# =============================================================
+# Un solo comando (docker compose up) levanta toda la app.
+# En FASE 1 solo arrancamos la base de datos + Adminer (GUI).
+# El backend y el frontend se añadirán en las Fases 2 y 3.
+#
+# Arranque parcial (lo que usamos AHORA):
+#   docker compose up -d db adminer
+# Ver logs:           docker compose logs -f db
+# Apagar:             docker compose down
+# Apagar + borrar BD: docker compose down -v   (cuidado: borra datos)
+# -------------------------------------------------------------
+
+services:
+  # ---------------------------------------------------------
+  # 1) BASE DE DATOS  ·  PostgreSQL
+  # ---------------------------------------------------------
+  db:
+    image: postgres:16-alpine          # imagen oficial, ligera (alpine)
+    container_name: htb_db
+    restart: unless-stopped            # se reinicia solo si se cae
+    environment:                       # credenciales -> se leen del .env
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"                    # host:contenedor -> acceso desde tu PC
+    volumes:
+      - db_data:/var/lib/postgresql/data        # persistencia de los datos
+      - ./db/init:/docker-entrypoint-initdb.d   # SQL que se ejecuta al crear la BD
+    healthcheck:                       # avisa cuándo la BD está LISTA de verdad
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - htb-net
+
+  # ---------------------------------------------------------
+  # 2) ADMINER  ·  Interfaz web para mirar la BD (opcional)
+  # ---------------------------------------------------------
+  # Te deja inspeccionar tablas y datos en http://localhost:8080
+  # sin instalar nada. Útil mientras aprendemos.
+  adminer:
+    image: adminer:4
+    container_name: htb_adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy     # espera a que la BD pase el healthcheck
+    networks:
+      - htb-net
+
+  # ---------------------------------------------------------
+  # 3) BACKEND  ·  Express.js  (API REST)
+  # ---------------------------------------------------------
+  backend:
+    build: ./backend
+    container_name: htb_backend
+    restart: unless-stopped
+    environment:
+      # Cadena de conexión a la BD. El host es "db" (nombre del servicio
+      # en la red interna), NO localhost.
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      db:
+        condition: service_healthy     # no arranca hasta que la BD esté lista
+    volumes:
+      - ./backend:/app                 # monta tu código -> nodemon recarga al guardar
+      - /app/node_modules              # pero conserva node_modules del contenedor
+    networks:
+      - htb-net
+
+  # ---------------------------------------------------------
+  # 4) FRONTEND  ·  React + Vite
+  # ---------------------------------------------------------
+  frontend:
+    build: ./frontend
+    container_name: htb_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app          # tu código -> Vite recarga al guardar
+      - /app/node_modules        # conserva node_modules del contenedor
+    networks:
+      - htb-net
+
+# Volumen con nombre: los datos sobreviven a "docker compose down"
+volumes:
+  db_data:
+
+# Red privada interna: los servicios se ven por su nombre (db, backend...)
+networks:
+  htb-net:
+    driver: bridge

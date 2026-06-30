@@ -1,0 +1,13 @@
+# Secretos y entorno
+.env
+
+# Dependencias
+node_modules/
+
+# Datos de PostgreSQL (volumen local, no versionar)
+db_data/
+
+# Logs y basura del sistema
+*.log
+.DS_Store
+Thumbs.db

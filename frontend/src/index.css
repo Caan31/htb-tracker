@@ -1,0 +1,49 @@
+/* Tema oscuro estilo HTB con acento verde */
+:root {
+  --htb-green: #9fef00;
+  --htb-bg: #111927;
+  --htb-card: #1a2332;
+  --htb-border: #2a3b52;
+}
+
+body {
+  background-color: var(--htb-bg);
+  color: #e6edf3;
+}
+
+.htb-navbar {
+  background-color: #0b1120;
+  border-bottom: 2px solid var(--htb-green);
+}
+
+.htb-card {
+  background-color: var(--htb-card);
+  border: 1px solid var(--htb-border);
+  border-radius: 10px;
+  color: #e6edf3;
+}
+
+.htb-accent { color: var(--htb-green); }
+
+/* Barra de progreso simple */
+.htb-progress {
+  background-color: #0b1120;
+  border-radius: 6px;
+  height: 14px;
+  overflow: hidden;
+}
+.htb-progress-fill {
+  background-color: var(--htb-green);
+  height: 100%;
+  transition: width 0.4s ease;
+}
+
+.htb-badge {
+  background-color: #0b1120;
+  border: 1px solid var(--htb-border);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 0.8rem;
+  margin-right: 6px;
+  display: inline-block;
+}
